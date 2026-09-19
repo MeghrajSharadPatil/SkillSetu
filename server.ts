@@ -35,7 +35,7 @@ async function startServer() {
   app.get("/api/health", (_req, res) => {
     res.json({
       status: "ok",
-      service: "Karmayogi Sankhyiki MoSPI AI Service",
+      service: "SkillSetu MoSPI AI Service",
       timestamp: new Date().toISOString(),
       geminiAvailable: !!process.env.GEMINI_API_KEY,
     });
