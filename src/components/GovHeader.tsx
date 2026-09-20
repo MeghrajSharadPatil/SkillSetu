@@ -1,15 +1,17 @@
 import React from "react";
 import { OfficialProfile } from "../types";
-import { UserCheck, ShieldCheck, Globe, Volume2, Search, ArrowRightLeft } from "lucide-react";
+import { ShieldCheck, Globe, LogIn, LogOut, User, ChevronDown } from "lucide-react";
 
 interface GovHeaderProps {
   currentProfile: OfficialProfile;
   profiles: OfficialProfile[];
   onSelectProfile: (profile: OfficialProfile) => void;
+  isAuthenticated: boolean;
+  onOpenSignIn: () => void;
+  onOpenProfile: () => void;
+  onSignOut: () => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  fontSize: "sm" | "md" | "lg";
-  setFontSize: (size: "sm" | "md" | "lg") => void;
   language: "en" | "hi";
   setLanguage: (lang: "en" | "hi") => void;
   onOpenSahayak: () => void;
@@ -19,10 +21,12 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
   currentProfile,
   profiles,
   onSelectProfile,
+  isAuthenticated,
+  onOpenSignIn,
+  onOpenProfile,
+  onSignOut,
   activeTab,
   setActiveTab,
-  fontSize,
-  setFontSize,
   language,
   setLanguage,
   onOpenSahayak,
@@ -37,86 +41,78 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
       </div>
 
       {/* 2. Top Accessibility & Official Gov Bar */}
-      <div className="bg-[#0b2545] text-slate-200 text-xs px-4 py-1.5 flex flex-wrap items-center justify-between border-b border-slate-800">
+      <div className="bg-[#0b2545] text-slate-200 text-xs px-4 py-1.5 flex flex-wrap items-center justify-end border-b border-slate-800">
         <div className="flex items-center space-x-3">
-          <span className="font-semibold tracking-wide text-amber-400">
-            {language === "hi" ? "भारत सरकार" : "GOVERNMENT OF INDIA"}
-          </span>
-          <span className="text-slate-500">|</span>
-          <span className="hidden md:inline text-slate-300">
-            {language === "hi"
-              ? "सांख्यिकी और कार्यक्रम कार्यान्वयन मंत्रालय (MoSPI)"
-              : "Ministry of Statistics & Programme Implementation (MoSPI)"}
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          {/* Screen Reader & Text Sizing */}
-          <div className="hidden sm:flex items-center space-x-2 text-slate-300 border-r border-slate-700 pr-3">
-            <span className="text-[11px] flex items-center gap-1 text-slate-400">
-              <Volume2 className="w-3.5 h-3.5" />
-              Screen Reader
-            </span>
-            <span className="text-slate-600">|</span>
-            <span className="text-[11px]">Font:</span>
-            <button
-              onClick={() => setFontSize("sm")}
-              className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                fontSize === "sm" ? "bg-amber-500 text-slate-900" : "hover:text-white"
-              }`}
-              title="Small Text"
-            >
-              A-
-            </button>
-            <button
-              onClick={() => setFontSize("md")}
-              className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                fontSize === "md" ? "bg-amber-500 text-slate-900" : "hover:text-white"
-              }`}
-              title="Standard Text"
-            >
-              A
-            </button>
-            <button
-              onClick={() => setFontSize("lg")}
-              className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                fontSize === "lg" ? "bg-amber-500 text-slate-900" : "hover:text-white"
-              }`}
-              title="Large Text"
-            >
-              A+
-            </button>
-          </div>
-
           {/* Language Selector */}
-          <div className="flex items-center space-x-1">
-            <Globe className="w-3.5 h-3.5 text-amber-400" />
+          <div className="flex items-center">
             <button
+              id="gov-language-toggle"
               onClick={() => setLanguage(language === "en" ? "hi" : "en")}
-              className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 text-amber-300 hover:bg-slate-700 border border-slate-700 transition"
+              className="group inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-800/95 hover:bg-slate-700/90 border border-slate-700 hover:border-amber-400/50 shadow-inner text-[11px] font-medium text-slate-200 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400/50 select-none"
+              title={language === "en" ? "Switch language to हिन्दी" : "Switch language to English"}
             >
-              {language === "en" ? "हिन्दी (HI)" : "English (EN)"}
+              <div className="flex items-center justify-center w-4 h-4 rounded-full bg-amber-400/15 text-amber-400 group-hover:bg-amber-400/25 transition-colors">
+                <Globe className="w-3 h-3 transition-transform duration-300 group-hover:rotate-45" />
+              </div>
+
+              <div className="flex items-center bg-slate-900/90 rounded-full p-0.5 border border-slate-700/70 text-[10px]">
+                <span className={`px-1.5 py-0.5 rounded-full transition-all duration-150 ${
+                  language === "en" 
+                    ? "bg-amber-400 text-slate-950 font-black shadow-2xs" 
+                    : "text-slate-400 hover:text-slate-200 font-medium"
+                }`}>
+                  EN
+                </span>
+                <span className={`px-1.5 py-0.5 rounded-full transition-all duration-150 ${
+                  language === "hi" 
+                    ? "bg-amber-400 text-slate-950 font-black shadow-2xs" 
+                    : "text-slate-400 hover:text-slate-200 font-medium"
+                }`}>
+                  हिन्दी
+                </span>
+              </div>
+
+              <span className="text-[10px] text-amber-300/90 font-bold group-hover:text-amber-300 transition-colors">
+                {language === "en" ? "English" : "हिन्दी"}
+              </span>
             </button>
           </div>
 
-          {/* Profile Quick Switcher (For Demo & Verification) */}
-          <div className="flex items-center space-x-1.5 bg-slate-800/90 rounded px-2 py-0.5 border border-slate-700 text-[11px]">
-            <span className="text-slate-400 hidden lg:inline">Cadre Officer:</span>
-            <select
-              value={currentProfile.id}
-              onChange={(e) => {
-                const found = profiles.find((p) => p.id === e.target.value);
-                if (found) onSelectProfile(found);
-              }}
-              className="bg-transparent text-amber-200 text-xs font-medium focus:outline-none cursor-pointer pr-1"
+          <span className="text-slate-600">|</span>
+
+          {/* User Profile & Sign In Option */}
+          {isAuthenticated ? (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={onOpenProfile}
+                className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-amber-200 px-2.5 py-0.5 rounded border border-slate-700 transition text-[11px] font-medium cursor-pointer shadow-xs"
+                title="View & Edit Official Profile"
+              >
+                <div className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-[9px]">
+                  {currentProfile.name.split(" ")[1]?.[0] || currentProfile.name[0]}
+                </div>
+                <span className="max-w-[130px] truncate">{currentProfile.name}</span>
+                <span className="text-[10px] bg-blue-900 text-blue-200 px-1 py-0.2 rounded font-bold">Profile</span>
+              </button>
+
+              <button
+                onClick={onSignOut}
+                className="text-slate-400 hover:text-rose-300 text-[11px] font-medium flex items-center gap-1 transition px-1.5 py-0.5 rounded hover:bg-slate-800 cursor-pointer"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenSignIn}
+              className="flex items-center space-x-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-3 py-1 rounded transition text-xs cursor-pointer shadow-xs"
             >
-              {profiles.map((p) => (
-                <option key={p.id} value={p.id} className="bg-slate-900 text-white">
-                  {p.name} ({p.designation.split("(")[0].trim()})
-                </option>
-              ))}
-            </select>
-          </div>
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -178,20 +174,37 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
             </div>
           </div>
 
-          {/* Active Officer Card */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center space-x-3 text-left shadow-xs">
-            <div className="w-9 h-9 rounded-full bg-[#0B4F9C] text-white flex items-center justify-center font-bold text-sm shadow-inner">
-              {currentProfile.name.split(" ")[1]?.[0] || "O"}
-            </div>
-            <div className="text-xs leading-tight">
-              <div className="font-bold text-slate-900 flex items-center gap-1">
-                {currentProfile.name}
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+          {/* Active Officer Card / Sign In Action */}
+          {isAuthenticated ? (
+            <button
+              onClick={onOpenProfile}
+              className="bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-[#0B4F9C] rounded-xl p-2.5 flex items-center space-x-3 text-left shadow-xs transition cursor-pointer group"
+              title="Click to view & edit User Profile"
+            >
+              <div className="w-9 h-9 rounded-full bg-[#0B4F9C] text-white flex items-center justify-center font-bold text-sm shadow-inner group-hover:scale-105 transition">
+                {currentProfile.name.split(" ")[1]?.[0] || "O"}
               </div>
-              <div className="text-slate-600 text-[11px] font-medium">{currentProfile.designation}</div>
-              <div className="text-[10px] text-[#0B4F9C] font-semibold">{currentProfile.cadre}</div>
-            </div>
-          </div>
+              <div className="text-xs leading-tight">
+                <div className="font-bold text-slate-900 flex items-center gap-1 group-hover:text-[#0B4F9C] transition">
+                  <span>{currentProfile.name}</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" title="Online Active Session"></span>
+                </div>
+                <div className="text-slate-600 text-[11px] font-medium">{currentProfile.designation}</div>
+                <div className="text-[10px] text-[#0B4F9C] font-semibold flex items-center gap-1">
+                  <span>{currentProfile.cadre}</span>
+                  <span className="text-slate-400 font-normal group-hover:text-[#0B4F9C]">• View Profile →</span>
+                </div>
+              </div>
+            </button>
+          ) : (
+            <button
+              onClick={onOpenSignIn}
+              className="bg-[#0B4F9C] hover:bg-[#083a75] text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-xs flex items-center gap-2 transition cursor-pointer"
+            >
+              <LogIn className="w-4 h-4 text-amber-300" />
+              <span>Sign In with Karmayogi ID</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -200,11 +213,10 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between overflow-x-auto">
           <div className="flex space-x-1 sm:space-x-2 py-1">
             {[
-              { id: "overview", label: language === "hi" ? "राष्ट्रीय अवलोकन" : "National Overview" },
-              { id: "competency", label: language === "hi" ? "दक्षता एवं कौशल अंतर" : "Competency & Skill Gap" },
-              { id: "pathways", label: language === "hi" ? "iGOT व NSSTA पाठ्यक्रम" : "iGOT & NSSTA Pathways" },
-              { id: "assessment", label: language === "hi" ? "AI प्रश्नोत्तरी एवं मूल्यांकन" : "AI Assessment & MCQ Engine" },
-              { id: "analytics", label: language === "hi" ? "प्रशासनिक विश्लेषिकी" : "Analytics & Cadre Intelligence" },
+              { id: "overview", label: language === "hi" ? "डैशबोर्ड" : "Dashboard" },
+              { id: "assessment", label: language === "hi" ? "MCQ टेस्ट व कौशल अंतर पहचान" : "Solve MCQs & Identify Gaps" },
+              { id: "pathways", label: language === "hi" ? "आवंटित iGOT पाठ्यक्रम" : "Allocated iGOT Courses" },
+              { id: "competency", label: language === "hi" ? "दक्षता एवं कौशल प्रोफ़ाइल" : "Competency Profile" },
             ].map((tab) => (
               <button
                 key={tab.id}

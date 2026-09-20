@@ -13,7 +13,9 @@ import {
   Search,
   FileText,
   Sparkles,
-  Layers
+  Layers,
+  Target,
+  AlertCircle
 } from "lucide-react";
 
 interface LearningPathwaysProps {
@@ -37,19 +39,23 @@ export const LearningPathways: React.FC<LearningPathwaysProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [onlyTPAC, setOnlyTPAC] = useState<boolean>(false);
+  const [onlyAllocated, setOnlyAllocated] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>(filterKeyword);
   const [activeSyllabusCourse, setActiveSyllabusCourse] = useState<IGOTCourse | null>(null);
+
+  const allocatedCount = courses.filter((c) => c.isAllocated).length;
 
   const filteredCourses = courses.filter((c) => {
     const matchesCategory = selectedCategory === "All" || c.category === selectedCategory;
     const matchesTPAC = !onlyTPAC || c.tpacApproved;
+    const matchesAllocated = !onlyAllocated || c.isAllocated;
     const matchesSearch =
       !searchQuery ||
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.courseCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.competencyMapped.some((cmp) => cmp.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    return matchesCategory && matchesTPAC && matchesSearch;
+    return matchesCategory && matchesTPAC && matchesAllocated && matchesSearch;
   });
 
   return (
@@ -101,6 +107,18 @@ export const LearningPathways: React.FC<LearningPathwaysProps> = ({
           {/* Quick Filters */}
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <button
+              onClick={() => setOnlyAllocated(!onlyAllocated)}
+              className={`text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+                onlyAllocated
+                  ? "bg-[#0B4F9C] text-white shadow-2xs"
+                  : "bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100"
+              }`}
+            >
+              <Target className="w-3.5 h-3.5 text-amber-600" />
+              Allocated for Competency Gaps ({allocatedCount})
+            </button>
+
+            <button
               onClick={() => setOnlyTPAC(!onlyTPAC)}
               className={`text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
                 onlyTPAC
@@ -113,11 +131,12 @@ export const LearningPathways: React.FC<LearningPathwaysProps> = ({
             </button>
 
             {/* Clear Filters */}
-            {(searchQuery || onlyTPAC || selectedCategory !== "All") && (
+            {(searchQuery || onlyTPAC || onlyAllocated || selectedCategory !== "All") && (
               <button
                 onClick={() => {
                   setSearchQuery("");
                   setOnlyTPAC(false);
+                  setOnlyAllocated(false);
                   setSelectedCategory("All");
                 }}
                 className="text-xs text-rose-600 font-semibold hover:underline"
@@ -174,6 +193,12 @@ export const LearningPathways: React.FC<LearningPathwaysProps> = ({
                   </div>
 
                   <div className="flex flex-col items-end gap-1">
+                    {course.isAllocated && (
+                      <span className="bg-amber-400 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded shadow-2xs flex items-center gap-1">
+                        <Target className="w-3 h-3" />
+                        Gap Allocated
+                      </span>
+                    )}
                     {course.tpacApproved && (
                       <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-extrabold px-2 py-0.5 rounded flex items-center gap-1">
                         <ShieldCheck className="w-3 h-3 text-amber-700" />
@@ -197,6 +222,15 @@ export const LearningPathways: React.FC<LearningPathwaysProps> = ({
                   <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
                     {course.description}
                   </p>
+
+                  {course.isAllocated && course.allocationReason && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-md p-2 text-[11px] text-amber-900 flex items-start gap-1.5">
+                      <Target className="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5" />
+                      <div>
+                        <strong>Allocation Reason:</strong> {course.allocationReason}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Competency tags */}
                   <div className="flex flex-wrap gap-1 pt-1">

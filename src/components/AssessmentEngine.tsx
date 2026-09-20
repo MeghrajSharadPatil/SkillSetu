@@ -15,18 +15,28 @@ import {
   FileCheck,
   Printer,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
+  GraduationCap,
+  TrendingUp,
+  Target
 } from "lucide-react";
+import { IGOTCourse } from "../types";
 
 interface AssessmentEngineProps {
   presets: TrainingMaterialPreset[];
+  courses?: IGOTCourse[];
   onCompetencyGain: (competencyName: string, scoreGained: number) => void;
+  onAllocateCourses?: (competencyTag: string, scorePercentage: number) => void;
+  onNavigateToPathways?: (keyword?: string) => void;
   language: "en" | "hi";
 }
 
 export const AssessmentEngine: React.FC<AssessmentEngineProps> = ({
   presets,
+  courses = [],
   onCompetencyGain,
+  onAllocateCourses,
+  onNavigateToPathways,
   language,
 }) => {
   // Step in assessment workflow: 'setup' | 'taking' | 'results'
@@ -167,6 +177,9 @@ export const AssessmentEngine: React.FC<AssessmentEngineProps> = ({
 
     setQuizResult(result);
     setStage("results");
+    if (onAllocateCourses) {
+      onAllocateCourses(result.competencyGainTag, percentage);
+    }
   };
 
   // Sync score with competency profile
@@ -581,6 +594,129 @@ export const AssessmentEngine: React.FC<AssessmentEngineProps> = ({
             </div>
           </div>
 
+          {/* 3. AI-Driven Competency Gap Analysis & iGOT Course Allocation */}
+          <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-[#0B4F9C] text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded flex items-center gap-1">
+                    <Target className="w-3 h-3 text-amber-300" />
+                    Automatic Competency Gap Diagnosis
+                  </span>
+                  <span className="text-xs font-semibold text-slate-500">
+                    Domain: {quizResult.competencyGainTag}
+                  </span>
+                </div>
+                <h3 className="text-base font-extrabold text-slate-900 mt-1">
+                  Identified Competency Gap & Allocated iGOT Karmayogi Courses
+                </h3>
+              </div>
+
+              {onNavigateToPathways && (
+                <button
+                  onClick={() => onNavigateToPathways(quizResult.competencyGainTag)}
+                  className="text-xs font-bold text-[#0B4F9C] hover:text-[#083a75] flex items-center gap-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition self-start sm:self-auto"
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  View All in iGOT Catalog <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Gap Analysis Summary Box */}
+            <div className={`p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+              quizResult.passed ? "bg-emerald-50/50 border-emerald-200" : "bg-amber-50/60 border-amber-200"
+            }`}>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                    quizResult.passed ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                  }`}>
+                    {quizResult.passed ? "Proficiency Level Met: Intermediate/Advanced" : "Skill Gap Detected: Remediation Required"}
+                  </span>
+                  <span className="text-xs text-slate-600 font-medium">
+                    Score: {quizResult.scorePercentage}% ({quizResult.correctAnswers}/{quizResult.totalQuestions})
+                  </span>
+                </div>
+                <p className="text-xs text-slate-700 leading-relaxed">
+                  {quizResult.passed
+                    ? `You demonstrated solid command of ${quizResult.competencyGainTag}. To reach the next cadre benchmark, specialized advanced modules have been allocated to your profile below.`
+                    : `Your score (${quizResult.scorePercentage}%) indicates foundational concept gaps in ${quizResult.competencyGainTag}. iGOT Karmayogi curriculum modules have been automatically allocated to bridge these gaps.`}
+                </p>
+              </div>
+
+              <div className="bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-2xs shrink-0 text-center">
+                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Allocated Modules</div>
+                <div className="text-lg font-black text-[#0B4F9C]">
+                  {courses.filter(c => c.isAllocated).length || 2} Courses
+                </div>
+              </div>
+            </div>
+
+            {/* List of Allocated Courses */}
+            <div className="space-y-3 pt-2">
+              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <GraduationCap className="w-4 h-4 text-[#0B4F9C]" />
+                Assigned Learning Path Based on Your Quiz Performance:
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {courses
+                  .filter((c) => {
+                    if (c.isAllocated) return true;
+                    // Fallback matching by competency tag
+                    return c.competencyMapped.some(
+                      (m) =>
+                        m.toLowerCase().includes(quizResult.competencyGainTag.toLowerCase()) ||
+                        quizResult.competencyGainTag.toLowerCase().includes(m.toLowerCase())
+                    );
+                  })
+                  .slice(0, 4)
+                  .map((course) => (
+                    <div
+                      key={course.id}
+                      className="p-3.5 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/40 to-indigo-50/20 flex flex-col justify-between space-y-2.5 hover:shadow-xs transition"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="text-[10px] font-bold text-[#0B4F9C] bg-white border border-blue-200 px-2 py-0.5 rounded">
+                            {course.courseCode}
+                          </span>
+                          <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded">
+                            Auto-Allocated
+                          </span>
+                        </div>
+                        <h5 className="font-bold text-xs text-slate-900 leading-snug">
+                          {course.title}
+                        </h5>
+                        <p className="text-[11px] text-slate-600 line-clamp-2 mt-1">
+                          {course.description}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-blue-100 flex items-center justify-between text-[11px]">
+                        <div className="flex items-center gap-2 text-slate-500">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-slate-400" />
+                            {course.durationHours} hrs
+                          </span>
+                          <span>• {course.level}</span>
+                        </div>
+                        {onNavigateToPathways ? (
+                          <button
+                            onClick={() => onNavigateToPathways(course.courseCode)}
+                            className="text-[#0B4F9C] hover:underline font-bold flex items-center gap-0.5"
+                          >
+                            Start Course <ArrowRight className="w-3 h-3" />
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+
           {/* Detailed Question Review with Official Explanations */}
           <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
@@ -681,13 +817,23 @@ export const AssessmentEngine: React.FC<AssessmentEngineProps> = ({
               })}
             </div>
 
-            <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+            <div className="pt-4 border-t border-slate-200 flex flex-wrap justify-between items-center gap-3">
               <button
                 onClick={() => setStage("setup")}
-                className="bg-[#0B4F9C] hover:bg-[#083a75] text-white text-xs font-bold px-4 py-2 rounded-lg transition"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-4 py-2 rounded-lg transition"
               >
-                Create Another Assessment
+                ← Take Another Assessment
               </button>
+
+              {onNavigateToPathways && (
+                <button
+                  onClick={() => onNavigateToPathways(quizResult.competencyGainTag)}
+                  className="bg-[#0B4F9C] hover:bg-[#083a75] text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm flex items-center gap-1.5 transition"
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  View & Enroll in Allocated iGOT Courses →
+                </button>
+              )}
             </div>
           </div>
         </div>

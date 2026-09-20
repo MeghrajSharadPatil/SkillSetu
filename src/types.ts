@@ -52,6 +52,9 @@ export interface IGOTCourse {
   syllabus: string[];
   status: "Not Enrolled" | "In Progress" | "Completed";
   progressPercentage: number;
+  isAllocated?: boolean;
+  allocationReason?: string;
+  recommendedRole?: string;
 }
 
 export interface QuizQuestion {
